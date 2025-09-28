@@ -13,22 +13,24 @@ weather_df
 ```
 
 ## Basic Scatterplot
+
+Only create blank canvas:
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax))
 ```
-
-
+Add `geom_point`
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + 
   geom_point()
 ```
-
+Easier just pipe in:
 ```{r}
 weather_df |>
   ggplot(aes(x = tmin, y = tmax)) + 
   geom_point()
 ```
-
+Save the plot by assigning it to an object:
+Call it again to put it from "Value" to "Data" at "Environment
 ```{r}
 ggp_weather = 
   weather_df |>
@@ -37,46 +39,105 @@ ggp_weather =
 ggp_weather + geom_point()
 
 ```
+Check that some rows are missing:
+```{r}
+weather_df |>
+  filter(is.na(tmax))
+```
 
 
 ## Advanced Scatterplot
 
+`geom_point`adding color point based on variable group
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + 
   geom_point(aes(color = name))
 ```
 
+Define aesthetics can matter:
+`alpha` to show different density 
+`geom_smooth` to add smooth curve fits the scatters, but not very trustworthy
+`geom_smooth(se = FALSE)`to remove susceptible error ban 
+`color = name` give different color based on variable `name`
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + 
   geom_point(aes(color = name), alpha = .5) +
-  geom_smooth(se = FALSE)å
+  geom_smooth(se = FALSE)
 ```
 
-
+Use faceting real quick:
+`facet_grid`to split into multiple plots by subgroups:
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
   geom_point(alpha = .5) +
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ name)
 ```
-
-
+`facet_grid(name ~ .)` to show each subgroup in rows
 ```{r}
-ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(name ~ .)
+```
+`x = date` change x variable to shows how y changes in the time of year
+`size = prcp` shows information about percipertation
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name, shape = name)) + 
   geom_point(aes(size = prcp), alpha = .5) +
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ name)
 ```
 
+Learning Assignment Code:
+Write a code chain that starts with weather_df; focuses only on Central Park, converts temperatures to Fahrenheit, makes a scatterplot of min vs. max temperature, and overlays a linear regression line (using options in geom_smooth()).
+
+`geom_smooth(method()` Smoothing method (function) to use, accepts either NULL or a character vector, e.g. "lm", "glm", "gam", "loess" or a function
+`geom_smooth(se = )` Display confidence interval around smooth? (TRUE by default, see `level` to control.)
+```{r}
+weather_df |> 
+  filter(name == "CentralPark_NY") |> 
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_fahr = tmin * (9 / 5) + 32) |> 
+  ggplot(aes(x = tmin_fahr, y = tmax_fahr)) +
+  geom_point(alpha = .5) + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Small things
+
+you can also remove the points, or change the order of`point` and `smooth` depend on the order you put
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
+ # geom_point(alpha = .5) + 
+  geom_smooth(se = FALSE)
+```
+
+Show density of how data clusters:
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
+  geom_hex()
+```
+Color the points:
+`color` worked for both `geom_point()` and `geom_smooth()`, but `shape` only applies to `geom_point`
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
+  geom_point(color = "purple")
+```
 
 ## Odds and ends
 
+No `geom_point`, instead using `geom_smooth` directly
 ```{r}
 ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
   geom_smooth(se = FALSE) 
 ```
 
-
+`geom_hex()`, `geom_bin2d()`, or `geom_density2d()` all can use to avoid overplotting
 ```{r}
 ggplot(weather_df, aes(x = tmax, y = tmin)) + 
   geom_hex()
@@ -91,35 +152,56 @@ ggplot(weather_df) + geom_point(aes(x = tmax, y = tmin, color = "blue"))
 
 ## Univariate Plots
 
+Making histogram, no need to mention y-axis, it auto counts.
 ```{r}
 ggplot(weather_df, aes(x = tmax)) + 
   geom_histogram()
 ```
+`color` the bound, and `fill` color the area inside the bound:
+```{r}
+ggplot(weather_df, aes(x = tmax)) + 
+  geom_histogram(color = "purple", fill = "red")
+```
 
+Stack and differnetiate subgroups by color
 ```{r}
 ggplot(weather_df, aes(x = tmax, fill = name)) + 
   geom_histogram(position = "dodge", binwidth = 2)
 ```
 
+Density plot:
 ```{r}
 ggplot(weather_df, aes(x = tmax, fill = name)) + 
   geom_density(alpha = .4, adjust = .5, color = "blue")
 ```
 
+Box plot: `x = name` separate by subgroup variable - name
 ```{r}
 ggplot(weather_df, aes(x = name, y = tmax)) + 
-  geom_boxplot()
+  geom_boxplot(aes(fill = name))
 ```
 
+Violin Plots:(vertical version of density plot)
 ```{r}
 ggplot(weather_df, aes(x = name, y = tmax)) + 
   geom_violin(aes(fill = name), alpha = .5) + 
   stat_summary(fun = "median", color = "blue")
 ```
-
+Ridge Plot: nice if you have lots of categories in which the shape of the distribution matters
 ```{r}
 ggplot(weather_df, aes(x = tmax, y = name)) + 
   geom_density_ridges(scale = .85)
+```
+
+
+## Show a ZOOM-IN verison of plot
+
+Filter out data in the end (long tails):
+```{r}
+weather_df |>
+  filter(prcp > 5, prcp < 1000) |>
+  ggplot (aes(x = prcp, fill = name)) +
+  geom_density(alpha = 0.2)
 ```
 
 
@@ -133,7 +215,9 @@ ggp_weather =
 ggsave("ggp_weather.pdf", ggp_weather, width = 8, height = 5)
 ```
 
-
+Embedding plots in an R Markdown document:
+`fig.width`, `fig.height`, and `fig.asp` control the size of the figure created by R
+`out.width` or `out.heigh` control size of the figure inserted into your document
 ```{r}
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -142,6 +226,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+Font and point size in the figures generated by R are constant, they don’t scale with the overall size of the figure.
+*Text in a figure with width 12 will look smaller than text in a figure with width 6 after both have been embedded in a document
 ```{r}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + 
   geom_point(aes(color = name))
