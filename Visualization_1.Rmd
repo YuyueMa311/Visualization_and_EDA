@@ -209,7 +209,7 @@ weather_df |>
 
 ```{r}
 ggp_weather = 
-  ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  ggplot(weather_df, aes(x = tmin, y = tmax)) +  
   geom_point(aes(color = name), alpha = .5) 
 
 ggsave("ggp_weather.pdf", ggp_weather, width = 8, height = 5)
